@@ -7,12 +7,17 @@ app.TalkView = Backbone.View.extend({
     el: '#content',
 
     initialize: function () {
-        var self = this;
         this.collection = new app.Talks();
+        this.loadData();
+    },
+
+    loadData: function() {
+        var self = this;
         $.ajax({
             url: "list/speakers",
             method: "GET",
             success: function(list) {
+                self.didLoad = true;
                 self.tbl = new app.LiveEditTable(
                     ["Type", "Speaker", "CoSpeaker", "Tracks", "Title", "Abstract", "Duration", "Category", "Level"],
                     {
