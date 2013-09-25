@@ -16,9 +16,10 @@ console.log("initialize");
         };
         this.day = 1;
         this.days = 2;
-        this.start = 510;
+//        this.start = 510;
+        this.start = 420;
         this.slotSize = 15;
-        this.slots = 50;
+        this.slots = 65;
         this.tracks = 3;
 
 

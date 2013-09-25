@@ -137,6 +137,14 @@ app.TalkView = Backbone.View.extend({
                 },
                 async: true
             });
+            $.ajax({
+                url: "list/coSpeakers",
+                method: "GET",
+                success: function(list) {
+                    self.tbl.updateSelectionList("Speaker", list);
+                },
+                async: true
+            });
         }
 
         return this;
