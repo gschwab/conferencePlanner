@@ -1,4 +1,4 @@
-ConferencePlanner
+conferencePlanner
 =================
 
-ArangoDB-App
+This is an App to plan conferences based on ArangoDB - Foxx. 

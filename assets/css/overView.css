@@ -1,0 +1,94 @@
+#content {
+  height: 100%;
+}
+
+#leftOverview, #midOverview, #rightOverview {
+  float:left;
+  height: 100%;
+}
+
+#leftOverview {
+  width: 10%;
+}
+
+#midOverview {
+  width: 70%;
+}
+
+#rightOverview {
+  width: 20%;
+  overflow: auto;
+}
+
+#midOverview ul, #rightOverview ul {
+  margin:0 !important;
+  padding: 0 !important;
+  width: 100%;
+  background-color: #EEEEEE;
+  height: 100%;
+}
+
+.sortable {
+  list-style-type: none;
+  float: left;
+  background: #eee;
+  padding: 5px;
+}
+
+.sortable li {
+  margin: 5px;
+  padding: 5px;
+  font-size: 1.2em;
+  margin-right: 5px;
+  width: auto;
+}
+
+.talksClass {
+  height: 100px;
+}
+
+div.talk {
+  color: white;
+  margin: 4px;
+  border-radius: 16px;
+  border: 6px;
+  border-style: ridge;
+
+}
+
+div.talk-use_case {
+  background: orange;
+  border-color: darkorange;
+}
+
+div.talk-detail {
+  background: green;
+  border-color: darkgreen;
+}
+
+div.talk-product {
+background: blue;
+border-color: darkblue;
+}
+
+div.talk-training {
+  background: red;
+  border-color: darkred;
+}
+
+td.slot {
+  padding: 0px;
+}
+
+table.text-center td, table.text-center th {
+  text-align: center;
+}
+
+div.moveable {
+  position: absolute;
+  width: 150px;
+}
+
+tr {
+height: 60px;
+}

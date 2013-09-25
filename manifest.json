@@ -1,0 +1,56 @@
+{
+  "name": "Conference-Planner",
+  "version": "0.0.1",
+  "description": "An application to plan conferences.",
+  "author": "Heiko Kernbach & Michael Hackstein",
+
+  "controllers": {
+    "/": "conferencePlanner.js"
+  },
+
+  "setup": "scripts/setup.js",
+  "teardown": "scripts/teardown.js",
+  
+  "assets": {
+
+    "style.css": {
+      "files": [
+        "assets/css/**"
+      ]
+    },
+    
+    "index.html": {
+      "files": [
+        "assets/index.html"
+      ]
+    },
+    
+    "apps.js": {
+      "files": [
+        "assets/js/libs/jquery-1.9.1.js",
+        "assets/js/libs/jquery-ui-1.10.3.custom.min.js",
+        "assets/js/libs/underscore-min.js",
+        "assets/js/libs/backbone-min.js",
+        "assets/js/libs/ejs_0.9_alpha_1_production.js",
+        "assets/js/libs/bootstrap.js",
+	"assets/js/models/**",
+	"assets/js/collections/**",
+	"assets/js/views/**",
+	"assets/js/router/**"
+      ]
+    },
+    
+    "lib.js": {
+      "files": [
+        "assets/js/triagensLib/liveEditTable.js"
+      ]
+    }
+  },
+  
+  "files": {
+    "templates": "assets/templates",
+    "images": "assets/images"
+  },
+  
+  "lib": "."
+}
