@@ -67,14 +67,27 @@ div.talk-detail {
 }
 
 div.talk-product {
-background: blue;
-border-color: darkblue;
+    background: blue;
+    border-color: darkblue;
 }
 
 div.talk-training {
   background: red;
   border-color: darkred;
 }
+
+div.talk-null {
+    background: lightgray;
+    border-color: grey;
+    color: black;
+    font-style: italic;
+}
+
+div.talk .remove {
+    float: right;
+    margin-right:10px;
+}
+
 
 td.slot {
   padding: 0px;

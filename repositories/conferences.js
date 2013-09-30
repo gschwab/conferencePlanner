@@ -2,7 +2,7 @@
 /*global require, exports*/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief 
+/// @brief
 ///
 /// @file This Document represents the repository communicating with ArangoDB
 ///
@@ -14,7 +14,7 @@
 /// you may not use this file except in compliance with the License.
 /// You may obtain a copy of the License at
 ///
-///     http://www.apache.org/licenses/LICENSE-2.0
+/// http://www.apache.org/licenses/LICENSE-2.0
 ///
 /// Unless required by applicable law or agreed to in writing, software
 /// distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,32 +31,32 @@
 
 
 (function () {
-  "use strict";
-  
-  var _ = require("underscore"),
-    Foxx = require("org/arangodb/foxx"),
-    Conferences_Repository = Foxx.Repository.extend({
-      // Define the functionality to display all elements in the collection
-      list: function () {
-        return this.collection.toArray();
-      },
-      
-      show: function(id) {
-        return this.collection.document(id);
-      },
-      
-      save: function(content) {
-        return this.collection.save(content);
-      },
-      
-      update: function(id, content) {
-        return this.collection.replace(id, content);
-      },
-      
-      del: function(id) {
-        return this.collection.remove(id);
-      }
-    });
-  exports.Repository = Conferences_Repository;
-  
+    "use strict";
+
+    var _ = require("underscore"),
+        Foxx = require("org/arangodb/foxx"),
+        Conferences_Repository = Foxx.Repository.extend({
+            // Define the functionality to display all elements in the collection
+            list: function () {
+                return this.collection.toArray();
+            },
+
+            show: function(id) {
+                return this.collection.document(id);
+            },
+
+            save: function(content) {
+                return this.collection.save(content);
+            },
+
+            update: function(id, content) {
+                return this.collection.replace(id, content);
+            },
+
+            del: function(id) {
+                return this.collection.remove(id);
+            }
+        });
+    exports.Repository = Conferences_Repository;
+
 }());

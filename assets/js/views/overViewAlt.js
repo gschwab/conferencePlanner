@@ -15,11 +15,15 @@ console.log("initialize");
           _key: "123"
         };
         this.day = 1;
+        //number of days
         this.days = 2;
-//        this.start = 510;
+        //in minutes (e.g. 60 = "01:00", 420 = "07:00")
         this.start = 420;
+        //in minutes
         this.slotSize = 15;
+        //number of slots per day
         this.slots = 65;
+        //number of tracks
         this.tracks = 3;
 
 
@@ -37,12 +41,32 @@ console.log("initialize");
     events: {
         "mousedown .talk": "grabTalk",
         "mouseup td.slot": "dropTalk",
+        "mouseup td.remove": "removeTalkFromSchedule",
         "mouseup" : "cancelDrag",
         "mousemove" : "updateMoveAblePosition",
         "click .day": "switchDay"
     },
 
     template: new EJS({url: 'templates/overView.ejs'}),
+
+    removeTalkFromSchedule: function(e) {
+console.log("removeTalkFromSchedule");
+console.log("removeTalkFromSchedule $('#availableTalks'):" + $('#availableTalks'));
+        e = e || window.event;
+        if (!this.dragging) {
+            return;
+        }
+        e.cancelBubble = true;
+        var talk = this.talks.get(this.dragging.id);
+
+        $.ajax({
+            url: "inConf/" + talk.get("_key") + "/" + this.conf._key,
+            method: "DELETE"
+        });
+        this.addTalk(talk);
+        this.cleanUpMovable();
+        $(".moveable").remove();
+    },
 
     switchDay: function(e) {
 console.log("switchDay");
@@ -72,8 +96,10 @@ console.log("updateMoveAblePosition");
   
     cleanUpMovable: function() {
 console.log("cleanUpMovable");
+        console.log("cleanUpMovable this.moveAbleDiv:" + this.moveAbleDiv);
+        var that = this;
         _.each(this.moveAbleDiv.childNodes, function(c) {
-            this.moveAbleDiv.removeChild(c);
+            that.moveAbleDiv.removeChild(c);
         });
     },
 
@@ -192,8 +218,6 @@ console.log("checkAndReserveSpace");
         }
 
         for (i = 1; i < size; i++) {
-
-console.log("checkAndReserveSpace - Size: " + size);
             next = document.getElementById(dayId + "_" + (slotId + i) + "_" + trackId);
             if (next.style.display !== "none" && next.childNodes.length === 0) {
                 next.style.display = "none";

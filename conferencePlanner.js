@@ -29,349 +29,359 @@
 /// @author Copyright 2011-2013, triAGENS GmbH, Cologne, Germany
 ////////////////////////////////////////////////////////////////////////////////
 
-(function() {
-  "use strict";
+(function () {
+    "use strict";
 
-  // Initialise a new Application called app under the urlPrefix: "ayeaye".
-  var FoxxController = require("org/arangodb/foxx").Controller,
-  app = new FoxxController(applicationContext);
-  var internal = require("internal");
-  var foxxAuthentication = require("org/arangodb/foxx/authentication");
+    // Initialise a new Application called app under the urlPrefix: "ayeaye".
+    var FoxxController = require("org/arangodb/foxx").Controller,
+        app = new FoxxController(applicationContext);
+    var internal = require("internal");
+    var foxxAuthentication = require("org/arangodb/foxx/authentication");
 
-  function setupAuthentication () {
-    var lifetime = 6000;
+    function setupAuthentication() {
+        var lifetime = 6000;
 
-    var sessions = new foxxAuthentication.Sessions(applicationContext, {
-      lifetime: lifetime
+        var sessions = new foxxAuthentication.Sessions(applicationContext, {
+            lifetime: lifetime
+        });
+
+        var cookieAuth = new foxxAuthentication.CookieAuthentication(applicationContext, {
+            lifetime: lifetime,
+            name: "mycookie"
+        });
+
+        var auth = new foxxAuthentication.Authentication(applicationContext, sessions, cookieAuth);
+
+        return auth;
+    }
+
+    var auth = setupAuthentication();
+
+    var _ = require("underscore");
+
+    var Conferences = require("repositories/conferences").Repository;
+    var conferences = new Conferences(app.collection("conferences"), {
+        prefix: app.collectionPrefix
     });
 
-    var cookieAuth = new foxxAuthentication.CookieAuthentication(applicationContext, {
-      lifetime: lifetime,
-      name: "mycookie"
+    var Speakers = require("repositories/speakers").Repository;
+    var speakers = new Speakers(app.collection("speakers"), {
+        prefix: app.collectionPrefix
     });
 
-    var auth = new foxxAuthentication.Authentication(applicationContext, sessions, cookieAuth);
+    var Talks = require("repositories/talks").Repository;
+    var talks = new Talks(app.collection("talks"), {
+        prefix: app.collectionPrefix
+    });
 
-    return auth;
-  }
+    var Tracks = require("repositories/tracks").Repository;
+    var tracks = new Tracks(app.collection("tracks"), {
+        prefix: app.collectionPrefix
+    });
 
-  var auth = setupAuthentication();
+    var Gives = require("repositories/gives").Repository;
+    var gives = new Gives(app.collection("gives"), {
+        prefix: app.collectionPrefix
+    });
 
-  var _ = require("underscore");
+    var InConf = require("repositories/inConf").Repository;
+    var inConf = new InConf(app.collection("inConf"), {
+        prefix: app.collectionPrefix
+    });
 
-  var Conferences = require("repositories/conferences").Repository;
-  var conferences = new Conferences(app.collection("conferences"), {
-      prefix: app.collectionPrefix
-  });
 
-  var Speakers = require ("repositories/speakers").Repository;
-  var speakers = new Speakers(app.collection("speakers"), {
-      prefix: app.collectionPrefix
-  });
+    app.before("/*", function (req, res) {
+        app.currentSession = null;
 
-  var Talks = require ("repositories/talks").Repository;
-  var talks = new Talks(app.collection("talks"), {
-      prefix: app.collectionPrefix
-  });
+        // make an exception for the /login handler
+        if (Array.isArray(req.suffix) && req.suffix.length > 0) {
+            if (req.suffix[0].match(/^(login|index\.html|style\.css|apps\.js|lib\.js|templates)$/)) {
+                return true;
+            }
+        }
 
-  var Tracks = require ("repositories/tracks").Repository;
-  var tracks = new Tracks(app.collection("tracks"), {
-      prefix: app.collectionPrefix
-  });
+        // run the authentication
+        var authResult = auth.authenticate(req);
 
-  var Gives = require ("repositories/gives").Repository;
-  var gives = new Gives(app.collection("gives"), {
-      prefix: app.collectionPrefix
-  });
+        if (authResult.errorNum !== internal.errors.ERROR_NO_ERROR) {
+            // not authenticated
+            res.json({
+                "msg": "not authenticated!",
+                "result": authResult
+            });
 
-  var InConf = require ("repositories/inConf").Repository;
-  var inConf = new InConf(app.collection("inConf"), {
-      prefix: app.collectionPrefix
-  });
+            res.status(401);
+            return false;
+        }
 
-  app.before("/*", function (req, res) {
-    app.currentSession = null;
-
-    // make an exception for the /login handler
-    if (Array.isArray(req.suffix) && req.suffix.length > 0 ) {
-      if (req.suffix[0].match(/^(login|index\.html|style\.css|apps\.js|lib\.js|templates)$/)) {
+        // authenticated, now we have a session
+        app.currentSession = authResult.session;
         return true;
-      }
-    }
+    }, {honorResult: true});
 
-    // run the authentication
-    var authResult = auth.authenticate(req);
+    app.after("/*", function (req, res) {
+        var session = app.currentSession;
 
-    if (authResult.errorNum !== internal.errors.ERROR_NO_ERROR) {
-      // not authenticated
-      res.json({
-        "msg": "not authenticated!",
-        "result": authResult
-      });
+        if (session === null) {
+            // we don't have any session
+            return;
+        }
 
-      res.status(401);
-      return false;
-    }
-
-    // authenticated, now we have a session
-    app.currentSession = authResult.session;
-    return true;
-  }, {honorResult: true});
-
-  app.after("/*", function (req, res) {
-    var session = app.currentSession;
-
-    if (session === null) {
-      // we don't have any session
-      return;
-    }
-
-    session.update();
-  });
-
-  app.post("/logout", function (req, res) {
-    if (app.currentSession !== null) {
-      auth.endSession(req, res, app.currentSession._key);
-      app.currentSession = null;
-    }
-
-    res.json({
-      "msg": "logged out"
+        session.update();
     });
-  });
 
-  // some example method that can only be accessed when authenticated
-  app.get('/counter', function (req, res) {
-    app.currentSession.set("counter", 1 + (app.currentSession.get("counter") || 0));
+    app.post("/logout", function (req, res) {
+        if (app.currentSession !== null) {
+            auth.endSession(req, res, app.currentSession._key);
+            app.currentSession = null;
+        }
 
-    res.json({
-      "counter": app.currentSession.get("counter")
+        res.json({
+            "msg": "logged out"
+        });
     });
-  });
 
-	app.post("/login", function (req, res) {
+    // some example method that can only be accessed when authenticated
+    app.get('/counter', function (req, res) {
+        app.currentSession.set("counter", 1 + (app.currentSession.get("counter") || 0));
 
-    var parsedResponse = JSON.parse(req.requestBody);
-		var username = parsedResponse.username;
-		var password = parsedResponse.password;
+        res.json({
+            "counter": app.currentSession.get("counter")
+        });
+    });
 
-		try {
-			var users = new foxxAuthentication.Users(applicationContext);
+    app.post("/login", function (req, res) {
 
-			// only valid & active users can login
-			if (users.isValid(username, password)) {
-				app.currentSession = auth.beginSession(req, res, username, {
-					foo: "bar",
-					baz: "bam"
-				});
+        var parsedResponse = JSON.parse(req.requestBody);
+        var username = parsedResponse.username;
+        var password = parsedResponse.password;
 
-				res.json({
-					"msg": "logged in",
-					"session": app.currentSession
-				});
-				return;
-			}
-		}
-		catch (err) {
-		}
+        try {
+            var users = new foxxAuthentication.Users(applicationContext);
 
-		// user is invalid. show error
-		res.json({
-			"msg": "invalid user"
-		});
-		res.status(401);
-	});
+            // only valid & active users can login
+            if (users.isValid(username, password)) {
+                app.currentSession = auth.beginSession(req, res, username, {
+                    foo: "bar",
+                    baz: "bam"
+                });
 
-	app.get("conference", function(req, res) {
-		res.json(conferences.list());
-	});
+                res.json({
+                    "msg": "logged in",
+                    "session": app.currentSession
+                });
+                return;
+            }
+        }
+        catch (err) {
+        }
 
-	app.get("conference/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(conferences.show(id));
-	});
+        // user is invalid. show error
+        res.json({
+            "msg": "invalid user"
+        });
+        res.status(401);
+    });
 
-	app.post("conference", function(req,res) {
-		res.json(conferences.save(JSON.parse(req.requestBody)));
-	});
+    app.get("conference", function (req, res) {
+        res.json(conferences.list());
+    });
 
-	app.put("conference/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(conferences.update(id, JSON.parse(req.requestBody)));
-	});
+    app.get("conference/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(conferences.show(id));
+    });
 
-	app.del("conference/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(conferences.del(id));
-	});
+    app.post("conference", function (req, res) {
+        res.json(conferences.save(JSON.parse(req.requestBody)));
+    });
 
-	app.get("tracks", function(req, res) {
-		res.json(tracks.list());
-	});
+    app.put("conference/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(conferences.update(id, JSON.parse(req.requestBody)));
+    });
 
-    app.get("tracks/:id", function(req, res) {
+    app.del("conference/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(conferences.del(id));
+    });
+
+    app.get("tracks", function (req, res) {
+        res.json(tracks.list());
+    });
+
+    app.get("tracks/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.show(id));
     });
 
-    app.get("list/tracks", function(req, res) {
+    app.get("list/tracks", function (req, res) {
         res.json(tracks.head());
     });
 
-    app.post("tracks", function(req,res) {
+    app.post("tracks", function (req, res) {
         res.json(tracks.save(JSON.parse(req.requestBody)));
     });
 
-    app.put("tracks/:id", function(req, res) {
+    app.put("tracks/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.update(id, JSON.parse(req.requestBody)));
     });
 
-    app.del("tracks/:id", function(req, res) {
+    app.del("tracks/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.del(id));
     });
 
-    app.get("speaker", function(req, res) {
-		res.json(speakers.list());
-	});
-
-	app.get("speaker/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(speakers.show(id));
-	});
-
-	app.get("list/speakers", function(req, res) {
-		res.json(speakers.head());
-	});
-
-	app.post("speaker", function(req,res) {
-		res.json(speakers.save(JSON.parse(req.requestBody)));
-	});
-
-	app.put("speaker/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(speakers.update(id, JSON.parse(req.requestBody)));
-	});
-
-	app.del("speaker/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(speakers.del(id));
-	});
-
-	app.get("talk", function(req, res) {
-		res.json(talks.list());
-	});
-
-	app.get("talk/:id", function(req, res) {
-		var id = req.params("id");
-		talks.show(id);
-	});
-
-	app.post("talk", function(req,res) {
-		var content = JSON.parse(req.requestBody),
-		ret = talks.save(content);
-		if (content.Speaker_key) {
-			gives.save(content.Speaker_key, ret._key);
-		}
-		res.json(ret);
-	});
-
-	app.put("talk/:id", function(req, res) {
-		var id = req.params("id"),
-		content = JSON.parse(req.requestBody),
-		ret = talks.update(id, content);
-		gives.update(content.Speaker_key, ret._key);
-		res.json(ret);
-	});
-
-	app.del("talk/:id", function(req, res) {
-		var id = req.params("id");
-		inConf.removeTalk(id)
-		res.json(talks.del(id));
-	});
-
-	app.get("track", function(req, res) {
-		res.json(tracks.list());
-	});
-
-	app.get("track/:id", function(req, res) {
-		var id = req.params("id");
-		tracks.show(id);
-	});
-
-	app.post("track", function(req,res) {
-        require("internal").print("REQ: ", req.body(), "**********************");
-		tracks.save(req.body());
-		res.json("OK");
-	});
-
-    app.put("track/:id", function(req, res) {
-       var id = req.params("id"),
-           content = req.body();
-           tracks.update(id, content);
+    app.get("speaker", function (req, res) {
+        res.json(speakers.list());
     });
 
-	app.del("track/:id", function(req, res) {
-		var id = req.params("id");
-		res.json(tracks.del(id));
-	});
+    app.get("speaker/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(speakers.show(id));
+    });
 
-	app.post("gives/:speakerId/:talkId", function(req, res) {
-		var sId = req.params("speakerId");
-		var tId = req.params("talkId");
-		res.json(gives.save(sId, tId));
-	});
+    app.get("list/speakers", function (req, res) {
+        res.json(speakers.head());
+    });
 
-	app.get("gives/:speakerId", function(req, res) {
-		var sId = req.params("speakerId");
-		var edges = gives.listTalksOf(sId);
-		res.json(_.map(edges, function(e) {
-			return talks.show(e._to);
-		}));
-	});
+    app.post("speaker", function (req, res) {
+        res.json(speakers.save(JSON.parse(req.requestBody)));
+    });
 
-	app.del("gives/:edgeId", function(req, res) {
-		var id = req.params("edgeId");
-		res.json(gives.del(id));
-	});
+    app.put("speaker/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(speakers.update(id, JSON.parse(req.requestBody)));
+    });
 
-	app.get("inTrack/:trackId", function(req, res) {
-		var tId = req.params("trackId");
-		res.json(inTrack.listTalksIn(tId));
-	});
+    app.del("speaker/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(speakers.del(id));
+    });
 
-	app.get("html/:confId/:day", function(req, res) {
-		var confId = req.params("confId");
-		var day = req.params("day");
-		var TG = require("lib/templateGenerator").TemplateGenerator;
-		var tg = new TG(applicationContext.basePath);
+    app.get("talk", function (req, res) {
+        res.json(talks.list());
+    });
 
-		var test = tg.createTable("Home");
+    app.get("talk/:id", function (req, res) {
+        var id = req.params("id");
+        talks.show(id);
+    });
 
-		res.body = test;
-	});
+    app.post("talk", function (req, res) {
+        var content = JSON.parse(req.requestBody),
+            ret = talks.save(content);
+        if (content.Speaker_key) {
+            gives.save(content.Speaker_key, ret._key);
+        }
+        res.json(ret);
+    });
 
-	app.post("inTrack/:trackId/:talkId", function(req, res) {
-		var talkId = req.params("talkId");
-		var trackId = req.params("trackId");
-		res.json(inTrack.save(talkId, trackId));
-	});
+    app.put("talk/:id", function (req, res) {
+        var id = req.params("id"),
+            content = JSON.parse(req.requestBody),
+            ret = talks.update(id, content);
+        gives.update(content.Speaker_key, ret._key);
+        res.json(ret);
+    });
 
-	app.del("inTrack/:edgeId", function(req, res) {
-		var id = req.params("edgeId");
-		res.json(inTrack.del(id));
-	});
+    app.del("talk/:id", function (req, res) {
+        var id = req.params("id");
+        inConf.removeTalk(id)
+        res.json(talks.del(id));
+    });
 
-	app.get("talksInConf/:confId", function(req, res) {
-		var id = req.params("confId");
-		res.json(inConf.talksInConf(id));
-	});
+    app.get("track", function (req, res) {
+        res.json(tracks.list());
+    });
 
-	app.post("inConf/:talkId/:confId", function(req, res) {
-		var talkId = req.params("talkId"),
-		confId = req.params("confId"),
-		content = JSON.parse(req.requestBody);
-		res.json(inConf.save(talkId, confId, content));
-	});
+    app.get("track/:id", function (req, res) {
+        var id = req.params("id");
+        tracks.show(id);
+    });
+
+    app.post("track", function (req, res) {
+        tracks.save(req.body());
+        res.json("OK");
+    });
+
+    app.put("track/:id", function (req, res) {
+        var id = req.params("id"),
+            content = req.body();
+        tracks.update(id, content);
+    });
+
+    app.del("track/:id", function (req, res) {
+        var id = req.params("id");
+        res.json(tracks.del(id));
+    });
+
+    app.post("gives/:speakerId/:talkId", function (req, res) {
+        var sId = req.params("speakerId");
+        var tId = req.params("talkId");
+        res.json(gives.save(sId, tId));
+    });
+
+    app.get("gives/:speakerId", function (req, res) {
+        var sId = req.params("speakerId");
+        var edges = gives.listTalksOf(sId);
+        res.json(_.map(edges, function (e) {
+            return talks.show(e._to);
+        }));
+    });
+
+    app.del("gives/:edgeId", function (req, res) {
+        var id = req.params("edgeId");
+        res.json(gives.del(id));
+    });
+
+    app.get("inTrack/:trackId", function (req, res) {
+        var tId = req.params("trackId");
+        res.json(inTrack.listTalksIn(tId));
+    });
+
+    app.get("html/:confId/:day", function (req, res) {
+        var confId = req.params("confId");
+        var day = req.params("day");
+        var TG = require("lib/templateGenerator").TemplateGenerator;
+        var tg = new TG(applicationContext.basePath);
+
+        var test = tg.createTable("Home");
+
+        res.body = test;
+    });
+
+    app.post("inTrack/:trackId/:talkId", function (req, res) {
+        var talkId = req.params("talkId");
+        var trackId = req.params("trackId");
+        res.json(inTrack.save(talkId, trackId));
+    });
+
+    app.del("inTrack/:edgeId", function (req, res) {
+        var id = req.params("edgeId");
+        res.json(inTrack.del(id));
+    });
+
+    app.get("talksInConf/:confId", function (req, res) {
+        var id = req.params("confId");
+        res.json(inConf.talksInConf(id));
+    });
+
+    app.post("inConf/:talkId/:confId", function (req, res) {
+        var talkId = req.params("talkId"),
+            confId = req.params("confId"),
+            content = JSON.parse(req.requestBody);
+        res.json(inConf.save(talkId, confId, content));
+    });
+
+    app.del("inConf/:talkId/:confId", function (req, res) {
+        var talkId = req.params("talkId"),
+            confId = req.params("confId");
+        inConf.collection.outEdges("dev_conferencePlanner_talks/" + talkId).forEach(
+            function(doc) {
+                inConf.collection.remove(doc._key);
+            }
+        );
+    });
 }());
