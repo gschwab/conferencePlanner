@@ -1,0 +1,6 @@
+<select id="conferencesSelection">
+    <option value="">--select a conference--</option>
+    <% for (key in conferences) { %>
+        <option value="<%=conferences[key].attributes._key%>"><%=conferences[key].attributes.conference%></option>
+    <% } %>
+</select>

@@ -1,6 +1,6 @@
 var app = app || {};
 
-app.Track = Backbone.Model.extend({
+app.Conference = Backbone.Model.extend({
   idAttribute: "_key",
   
   isNew: function() {
@@ -11,9 +11,9 @@ app.Track = Backbone.Model.extend({
     var key = this.get("_key");
     if (!!key) {
         console.log(key);
-      return "track/" + key;
+      return "conference/" + key;
     }
-    return "track";
+    return "conference";
   }
   
 });

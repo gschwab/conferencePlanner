@@ -69,11 +69,11 @@
   var s = new f.Sessions(applicationContext);
   s.setup();
 
-  createCollection("speakers");
-  createCollection("talks");
-  createCollection("tracks");
-  createCollection("conferences");
-  createEdgeCollection("gives");
-  createEdgeCollection("inConf");
+//  createCollection("speakers");
+//  createCollection("talks");
+//  createCollection("tracks");
+//  createCollection("conferences");
+//  createEdgeCollection("gives");
+//  createEdgeCollection("inConf");
 
 }());

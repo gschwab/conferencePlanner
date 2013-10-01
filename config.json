@@ -1,0 +1,9 @@
+{
+    "authentication":
+    {
+        "type" : "cookie",
+        "cookieLifetime": 36000,
+        "cookieName":"meinKeks",
+        "sessionLifetime":6000
+    }
+}

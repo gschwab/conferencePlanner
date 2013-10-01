@@ -38,16 +38,19 @@
     var internal = require("internal");
     var foxxAuthentication = require("org/arangodb/foxx/authentication");
 
-    function setupAuthentication() {
-        var lifetime = 6000;
+    //read the configuration config.json
+    var fs = require("fs");
+    var config = JSON.parse(fs.read(fs.join(applicationContext.basePath, "config.json")));
 
+
+    function setupAuthentication() {
         var sessions = new foxxAuthentication.Sessions(applicationContext, {
-            lifetime: lifetime
+            lifetime: config.authentication.sessionLifetime
         });
 
         var cookieAuth = new foxxAuthentication.CookieAuthentication(applicationContext, {
-            lifetime: lifetime,
-            name: "mycookie"
+            lifetime: config.authentication.cookieLifetime,
+            name: config.authentication.cookieName
         });
 
         var auth = new foxxAuthentication.Authentication(applicationContext, sessions, cookieAuth);
@@ -64,69 +67,73 @@
         prefix: app.collectionPrefix
     });
 
-    var Speakers = require("repositories/speakers").Repository;
-    var speakers = new Speakers(app.collection("speakers"), {
-        prefix: app.collectionPrefix
-    });
+    var Speakers = null;
+    var speakers = null;
 
-    var Talks = require("repositories/talks").Repository;
-    var talks = new Talks(app.collection("talks"), {
-        prefix: app.collectionPrefix
-    });
+    var Talks = null;
+    var talks = null;
 
-    var Tracks = require("repositories/tracks").Repository;
-    var tracks = new Tracks(app.collection("tracks"), {
-        prefix: app.collectionPrefix
-    });
+    var Tracks = null;
+    var tracks = null;
 
-    var Gives = require("repositories/gives").Repository;
-    var gives = new Gives(app.collection("gives"), {
-        prefix: app.collectionPrefix
-    });
+    var Gives = null;
+    var gives = null;
 
-    var InConf = require("repositories/inConf").Repository;
-    var inConf = new InConf(app.collection("inConf"), {
-        prefix: app.collectionPrefix
-    });
-
+    var InConf = null;
+    var inConf = null;
 
     app.before("/*", function (req, res) {
-        app.currentSession = null;
-
-        // make an exception for the /login handler
-        if (Array.isArray(req.suffix) && req.suffix.length > 0) {
-            if (req.suffix[0].match(/^(login|index\.html|style\.css|apps\.js|lib\.js|templates)$/)) {
-                return true;
-            }
-        }
-
         // run the authentication
         var authResult = auth.authenticate(req);
 
         if (authResult.errorNum !== internal.errors.ERROR_NO_ERROR) {
             // not authenticated
-            res.json({
-                "msg": "not authenticated!",
-                "result": authResult
-            });
-
-            res.status(401);
-            return false;
+            return;
         }
 
         // authenticated, now we have a session
         app.currentSession = authResult.session;
-        return true;
-    }, {honorResult: true});
+
+        var conf = app.currentSession.get("conference");
+        if (conf !== "") {
+            Tracks = require("repositories/tracks").Repository;
+            tracks = new Tracks(app.collection("tracks_" + conf), {
+                prefix: app.collectionPrefix
+            });
+            Gives = require("repositories/gives").Repository;
+            gives = new Gives(app.collection("gives_" + conf), {
+                prefix: app.collectionPrefix
+            });
+
+            InConf = require("repositories/inConf").Repository;
+            inConf = new InConf(app.collection("inConf_" + conf), {
+                prefix: app.collectionPrefix
+            });
+            Speakers = require("repositories/speakers").Repository;
+            speakers = new Speakers(app.collection("speakers_" + conf), {
+                prefix: app.collectionPrefix
+            });
+
+            Talks = require("repositories/talks").Repository;
+            talks = new Talks(app.collection("talks_" + conf), {
+                prefix: app.collectionPrefix
+            });
+        }
+    });
+
+    app.get("/checkConference", function (req, res) {
+       if (app.currentSession !== null) {
+           res.json({ conference: app.currentSession.get("conference") });
+       }
+       return { conference: null };
+    });
 
     app.after("/*", function (req, res) {
         var session = app.currentSession;
-
-        if (session === null) {
+        if (session == null) {
             // we don't have any session
             return;
         }
-
         session.update();
     });
 
@@ -141,14 +148,19 @@
         });
     });
 
-    // some example method that can only be accessed when authenticated
-    app.get('/counter', function (req, res) {
-        app.currentSession.set("counter", 1 + (app.currentSession.get("counter") || 0));
-
-        res.json({
-            "counter": app.currentSession.get("counter")
-        });
-    });
+/*    app.login(
+        "/login", {
+            onSuccess: function (req, res) {
+                req.currentSession.set("fancy", "pants");
+                res.json({
+                    msg: "Logged in!",
+                    user: req.user.identifier,
+                    key: req.currentSession._key
+                });
+                return;
+            }
+        }
+    );*/
 
     app.post("/login", function (req, res) {
 
@@ -163,9 +175,8 @@
             if (users.isValid(username, password)) {
                 app.currentSession = auth.beginSession(req, res, username, {
                     foo: "bar",
-                    baz: "bam"
+                    conference: ""
                 });
-
                 res.json({
                     "msg": "logged in",
                     "session": app.currentSession
@@ -384,4 +395,14 @@
             }
         );
     });
+
+    app.get("conferences", function (req, res) {
+        res.json(conferences.list());
+    });
+
+    app.post("setConference/:conferenceKey", function (req, res) {
+        var conferenceKey = req.params("conferenceKey");
+        app.currentSession.set("conference", conferenceKey);
+    });
+
 }());

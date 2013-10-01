@@ -22,6 +22,7 @@ app.overViewOld = Backbone.View.extend({
     steps: 0.5
   },
 
+
   count: 1,
 
   events: {

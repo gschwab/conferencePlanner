@@ -104,19 +104,17 @@ console.log("cleanUpMovable");
     },
 
     getDurationOfTalk: function (talk) {
-console.log("getDurationOfTalk");
+//console.log("getDurationOfTalk");
         var duration = talk.get("Duration");
         return Math.ceil(duration / this.slotSize);
     },
 
     getTracksOfTalk: function (talk) {
-console.log("getTracksOfTalk");
+//console.log("getTracksOfTalk");
         var tracksOfTalk = talk.get("Tracks_key");
         if(tracksOfTalk == "all_tracks") {
-console.log("getTracksOfTalk - all_tracks: " + this.tracks);
             return "all";
         } else {
-console.log("getTracksOfTalk - single");
             return "single";
         }
     },
