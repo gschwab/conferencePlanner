@@ -8,7 +8,7 @@ app.TalkView = Backbone.View.extend({
 
     initialize: function () {
         this.collection = new app.Talks();
-        this.loadData();
+//        this.loadData();
     },
 
     loadData: function() {
@@ -134,14 +134,7 @@ app.TalkView = Backbone.View.extend({
                 method: "GET",
                 success: function(list) {
                     self.tbl.updateSelectionList("Speaker", list);
-                },
-                async: true
-            });
-            $.ajax({
-                url: "list/coSpeakers",
-                method: "GET",
-                success: function(list) {
-                    self.tbl.updateSelectionList("Speaker", list);
+                    self.tbl.updateSelectionList("CoSpeaker", list);
                 },
                 async: true
             });

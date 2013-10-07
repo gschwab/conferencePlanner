@@ -3,12 +3,11 @@
 
 var app = app || {};
 
-app.ConferenceView = Backbone.View.extend({
+app.NewConferenceView = Backbone.View.extend({
     el: '#content',
 
     initialize: function () {
         var self = this;
-        this.collection = new app.Conferences();
     },
 
     events: {
@@ -16,14 +15,14 @@ app.ConferenceView = Backbone.View.extend({
         'click #newConferenceButton'   : 'newConference'
     },
 
-    template: _.template(new EJS({url: 'templates/conferenceView.ejs'}).text),
+    template: _.template(new EJS({url: 'templates/newConferenceView.ejs'}).text),
 
     render: function() {
         this.$el = $(this.el);
         this.$el.html(
             this.template(
                 {
-                    conferences: this.collection.models
+//                    conferences: this.collection.models
                 }
             )
         );

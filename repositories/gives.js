@@ -32,20 +32,22 @@
 
 (function () {
   "use strict";
-  
+
   var _ = require("underscore"),
     Foxx = require("org/arangodb/foxx"),
     Gives_Repository = Foxx.Repository.extend({
-      
+
+
+
       // Define the functionality to display all elements in the collection
       listTalksOf: function (id) {
-        var speakerId = this.prefix + "_speakers/" + id;
+        var speakerId = this.prefix + "_speakers_" + this.options.suffix + "/" + id;
         return this.collection.outEdges(speakerId);
       },
       
       save: function(sId, tId) {
-        var speakerId = this.prefix + "_speakers/" + sId;
-        var talkId = this.prefix + "_talks/" + tId;
+        var speakerId = this.prefix + "_speakers_" + this.options.suffix + "/" + sId;
+        var talkId = this.prefix + "_talks_" + this.options.suffix + "/" + tId;
         return this.collection.save(speakerId, talkId, {});
       },
       
@@ -54,8 +56,8 @@
       },
       
       update: function(sId, tId) {
-        var speakerId = this.prefix + "_speakers/" + sId;
-        var talkId = this.prefix + "_talks/" + tId;
+        var speakerId = this.prefix + "_speakers_" + this.options.suffix + "/" + sId;
+        var talkId = this.prefix + "_talks_" + this.options.suffix + "/" + tId;
         var ins = this.collection.inEdges(talkId)[0];
         require("console").log(speakerId);
         if (sId === "null") {

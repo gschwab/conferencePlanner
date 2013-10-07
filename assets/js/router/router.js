@@ -13,6 +13,7 @@ app.Router = Backbone.Router.extend({
         "speaker" : "speaker",
         "tracks"  : "tracks",
         "conferences"  : "conferences",
+        "newConference"  : "newConference",
         "login"   : "login"
     },
 
@@ -30,14 +31,15 @@ app.Router = Backbone.Router.extend({
         });
 
         this.overView = new app.overView();
-        this.naviView = new app.navigationView("blub");
+        this.naviView = new app.navigationView();
         this.speakerView = new app.SpeakerView();
         this.talkView = new app.TalkView();
         this.trackView = new app.TrackView();
         this.conferenceView = new app.ConferenceView();
+        this.newConferenceView = new app.NewConferenceView();
     },
 
-    checkConference: function () {
+    getConferenceName: function () {
         var result;
 
         $.ajax({
@@ -46,14 +48,24 @@ app.Router = Backbone.Router.extend({
             dataType: "json",
             contentType: "application/json",
             success: function (data) {
-                result = data.conference;
+                result = {
+                    conferenceName: data.conferenceName,
+                    conferenceKey: data.conferenceKey
+                };
             },
             error: function (data) {
                 result = null;
             }
-        })
+        });
+        return result;
 
-        if (result !== null && result !== '') {
+    },
+
+    checkConference: function () {
+        var result = this.getConferenceName();
+        this.naviView.conference = result;
+
+        if (result !== null && result.conferenceKey !== '') {
             return true;
         }
 
@@ -99,6 +111,12 @@ app.Router = Backbone.Router.extend({
 
     conferences: function () {
         this.conferenceView.render();
+        this.naviView.setActive("conferences");
+        this.naviView.render();
+    },
+
+    newConference: function () {
+        this.newConferenceView.render();
         this.naviView.setActive("conferences");
         this.naviView.render();
     },

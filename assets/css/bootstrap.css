@@ -4479,7 +4479,7 @@ input[type="submit"].btn.btn-mini {
 .navbar-static-top .container,
 .navbar-fixed-top .container,
 .navbar-fixed-bottom .container {
-  width: 940px;
+  width: 1040px;
 }
 
 .navbar-fixed-top {
@@ -4846,6 +4846,16 @@ input[type="submit"].btn.btn-mini {
 .navbar-inverse .btn-navbar:active,
 .navbar-inverse .btn-navbar.active {
   background-color: #000000 \9;
+}
+
+.navbar-conference {
+    color: #fed22f;
+    display: block;
+    float: left;
+    font-size: 20px;
+    font-weight: 200;
+    margin-left: -20px;
+    padding: 10px 20px;
 }
 
 .breadcrumb {

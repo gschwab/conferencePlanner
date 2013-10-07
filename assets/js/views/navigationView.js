@@ -15,7 +15,8 @@ app.navigationView = Backbone.View.extend({
     this.collection = new app.Sessions();
   },
 
-  template: new EJS({url: 'templates/navigationView.ejs'}),
+//  template: new EJS({url: 'templates/navigationView.ejs'}),
+    template: _.template(new EJS({url: 'templates/navigationView.ejs'}).text),
 
   switchToTab: function(e) {
     app.router.navigate(
@@ -30,7 +31,16 @@ app.navigationView = Backbone.View.extend({
   },
 
   render: function() {
-    $(this.el).html(this.template.text);
+
+//    $(this.el).html(this.template.text);
+      this.$el.html(
+          this.template(
+              {
+                  conferenceName: this.conference.conferenceName,
+                  conferenceKey: this.conference.conferenceKey
+              }
+          )
+      );
     return this;
   },
   

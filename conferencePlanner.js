@@ -62,11 +62,14 @@
 
     var _ = require("underscore");
 
+    var currentConferenceKey = null;
+
     var Conferences = require("repositories/conferences").Repository;
     var conferences = new Conferences(app.collection("conferences"), {
         prefix: app.collectionPrefix
     });
 
+    // will be assigned in app.before, when conference is set
     var Speakers = null;
     var speakers = null;
 
@@ -94,38 +97,46 @@
         // authenticated, now we have a session
         app.currentSession = authResult.session;
 
-        var conf = app.currentSession.get("conference");
-        if (conf !== "") {
+        var conferenceKey = app.currentSession.get("conferenceKey");
+        if (conferenceKey !== "") {
+            currentConferenceKey = conferenceKey;
+
             Tracks = require("repositories/tracks").Repository;
-            tracks = new Tracks(app.collection("tracks_" + conf), {
+            tracks = new Tracks(app.collection("tracks_" + conferenceKey), {
                 prefix: app.collectionPrefix
             });
             Gives = require("repositories/gives").Repository;
-            gives = new Gives(app.collection("gives_" + conf), {
-                prefix: app.collectionPrefix
+            gives = new Gives(app.collection("gives_" + conferenceKey), {
+                prefix: app.collectionPrefix,
+                suffix: conferenceKey
             });
 
             InConf = require("repositories/inConf").Repository;
-            inConf = new InConf(app.collection("inConf_" + conf), {
-                prefix: app.collectionPrefix
+            inConf = new InConf(app.collection("inConf_" + conferenceKey), {
+                prefix: app.collectionPrefix,
+                suffix: conferenceKey
             });
             Speakers = require("repositories/speakers").Repository;
-            speakers = new Speakers(app.collection("speakers_" + conf), {
+            speakers = new Speakers(app.collection("speakers_" + conferenceKey), {
                 prefix: app.collectionPrefix
             });
 
             Talks = require("repositories/talks").Repository;
-            talks = new Talks(app.collection("talks_" + conf), {
+            talks = new Talks(app.collection("talks_" + conferenceKey), {
                 prefix: app.collectionPrefix
             });
         }
     });
 
     app.get("/checkConference", function (req, res) {
-       if (app.currentSession !== null) {
-           res.json({ conference: app.currentSession.get("conference") });
-       }
-       return { conference: null };
+        if (app.currentSession !== null &&  typeof app.currentSession !== "undefined") {
+            res.json(
+                {
+                    conferenceKey: app.currentSession.get("conferenceKey"),
+                    conferenceName: app.currentSession.get("conferenceName")
+                }
+            );
+        }
     });
 
     app.after("/*", function (req, res) {
@@ -138,7 +149,7 @@
     });
 
     app.post("/logout", function (req, res) {
-        if (app.currentSession !== null) {
+        if (app.currentSession !== null &&  typeof app.currentSession !== "undefined") {
             auth.endSession(req, res, app.currentSession._key);
             app.currentSession = null;
         }
@@ -175,7 +186,8 @@
             if (users.isValid(username, password)) {
                 app.currentSession = auth.beginSession(req, res, username, {
                     foo: "bar",
-                    conference: ""
+                    conferenceKey: "",
+                    conferenceName: ""
                 });
                 res.json({
                     "msg": "logged in",
@@ -389,7 +401,7 @@
     app.del("inConf/:talkId/:confId", function (req, res) {
         var talkId = req.params("talkId"),
             confId = req.params("confId");
-        inConf.collection.outEdges("dev_conferencePlanner_talks/" + talkId).forEach(
+        inConf.collection.outEdges("dev_conferencePlanner_talks_" + currentConferenceKey + "/" + talkId).forEach(
             function(doc) {
                 inConf.collection.remove(doc._key);
             }
@@ -402,7 +414,15 @@
 
     app.post("setConference/:conferenceKey", function (req, res) {
         var conferenceKey = req.params("conferenceKey");
-        app.currentSession.set("conference", conferenceKey);
+        var conference = conferences.show(conferenceKey);
+        app.currentSession.set("conferenceKey", conferenceKey);
+        app.currentSession.set("conferenceName", conference.conference);
+    });
+
+    app.get("blub", function (req, res) {
+        conferences._show
+//        res.json({conferenceName: app.currentSession.get("conference")});
+        res.json({blub: "BLUBBER", blubber: "foxxxxxxxx"});
     });
 
 }());

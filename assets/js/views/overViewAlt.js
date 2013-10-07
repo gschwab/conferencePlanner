@@ -7,7 +7,6 @@ app.overView = Backbone.View.extend({
     el: '#content',
 
     initialize: function () {
-console.log("initialize");
         var self = this;
 
         //TODO
@@ -50,8 +49,6 @@ console.log("initialize");
     template: new EJS({url: 'templates/overView.ejs'}),
 
     removeTalkFromSchedule: function(e) {
-console.log("removeTalkFromSchedule");
-console.log("removeTalkFromSchedule $('#availableTalks'):" + $('#availableTalks'));
         e = e || window.event;
         if (!this.dragging) {
             return;
@@ -69,7 +66,6 @@ console.log("removeTalkFromSchedule $('#availableTalks'):" + $('#availableTalks'
     },
 
     switchDay: function(e) {
-console.log("switchDay");
         var newDay = parseInt(e.currentTarget.id.substring(4));
         $("#day_" + this.day).parent().toggleClass("active", false);
         $("#day_" + newDay).parent().toggleClass("active", true);
@@ -79,7 +75,6 @@ console.log("switchDay");
     },
 
     updateMoveAblePosition: function(e) {
-console.log("updateMoveAblePosition");
         var x,y;
         if (e) {
             x = e.pageX;
@@ -95,8 +90,6 @@ console.log("updateMoveAblePosition");
     },
   
     cleanUpMovable: function() {
-console.log("cleanUpMovable");
-        console.log("cleanUpMovable this.moveAbleDiv:" + this.moveAbleDiv);
         var that = this;
         _.each(this.moveAbleDiv.childNodes, function(c) {
             that.moveAbleDiv.removeChild(c);
@@ -104,13 +97,11 @@ console.log("cleanUpMovable");
     },
 
     getDurationOfTalk: function (talk) {
-//console.log("getDurationOfTalk");
         var duration = talk.get("Duration");
         return Math.ceil(duration / this.slotSize);
     },
 
     getTracksOfTalk: function (talk) {
-//console.log("getTracksOfTalk");
         var tracksOfTalk = talk.get("Tracks_key");
         if(tracksOfTalk == "all_tracks") {
             return "all";
@@ -120,7 +111,6 @@ console.log("cleanUpMovable");
     },
 
     removeFromParent: function(talk) {
-console.log("removeFromParent");
         var p = talk.parentElement;
         if (p.tagName.toLowerCase() === "ul") {
             p.removeChild(talk);
@@ -160,7 +150,6 @@ console.log("removeFromParent");
     },
 
     insertBackToParent: function(talk, p, sib) {
-console.log("insertBackToParent");
         if (p.tagName.toLowerCase() === "ul") {
             p.insertBefore(talk, sib);
             return;
@@ -181,7 +170,6 @@ console.log("insertBackToParent");
     },
 
     grabTalk: function(e) {
-console.log("grabTalk");
         e = e || window.event;
         var sel = e.currentTarget;
         this.dragging = sel;
@@ -193,7 +181,6 @@ console.log("grabTalk");
     },
 
     checkAndReserveSpace: function (td, talk) {
-console.log("checkAndReserveSpace");
         var id = td.id.split("_"),
         dayId = parseInt(id[0]),
         slotId = parseInt(id[1]),
@@ -250,7 +237,6 @@ console.log("checkAndReserveSpace");
 
 
     moveTalkToCalender: function(talkId, day, slot, track) {
-console.log("moveTalkToCalender");
         var td = document.getElementById(day + "_" + slot + "_" + track),
         talkDiv = document.getElementById(talkId),
         talk = this.talks.get(talkId);
@@ -262,7 +248,6 @@ console.log("moveTalkToCalender");
     },
 
     dropTalk: function(e) {
-console.log("dropTalk");
         e = e || window.event;
         if (!this.dragging) {
             return;
@@ -295,7 +280,6 @@ console.log("dropTalk");
     },
 
     cancelDrag: function(e) {
-console.log("cancelDrag");
         if (!this.dragging) {
             return;
         }
@@ -307,7 +291,6 @@ console.log("cancelDrag");
     },
 
     render: function(conference) {
-console.log("render");
         if (conference) {
             this.tracks = conference.tracks;
             this.start = conference.start;
@@ -342,7 +325,6 @@ console.log("render");
     },
 
     addTalk: function (t) {
-console.log("addTalk");
         var height = this.getDurationOfTalk(t)
         $('#availableTalks').append(
             this.talkTmpl.render({
@@ -368,7 +350,6 @@ console.log("addTalk");
     },
 
     appendCollectionTracks: function () {
-console.log("appendCollectionTracks");
         var self = this;
         this.talks.each(function(k) {
             self.addTalk(k);
@@ -376,7 +357,6 @@ console.log("appendCollectionTracks");
     },
   
     updateLinkedTalks: function(data) {
-console.log("updateLinkedTalks");
         var self = this;
         _.each(data, function(t) {
             var talkId = t._from.substring(t._from.lastIndexOf("/") + 1);

@@ -31,44 +31,47 @@
 
 
 (function () {
-  "use strict";
-  
-  var _ = require("underscore"),
+    "use strict";
+
+    var _ = require("underscore"),
     Foxx = require("org/arangodb/foxx"),
     InConf_Repository = Foxx.Repository.extend({
-      
-      save: function(tKey, cKey, content) {
-        var confId = this.prefix + "_conferences/" + cKey;
-          var talkId = this.prefix + "_talks/" + tKey;
-          var old = _.findWhere(
-          this.collection.outEdges(talkId),
-          {_to: confId}
-        );
-        if (old) {
-          return this.collection.replace(old._key, content);
-        } else {
-          return this.collection.save(talkId, confId, content);
-        }        
-      },
-      
-      removeTalk: function(tKey) {
-        var talkId = this.prefix + "_talks/" + tKey;
-        var toRm = this.collection.outEdges(talkId);
-        var self = this;
-        _.each(toRm, function(e) {
-          self.collection.remove(e._id);
-        });
-      },
-      
-      talksInConf: function(cKey) {
-        var confId = this.prefix + "_conferences/" + cKey;
-        return this.collection.inEdges(confId);
-      },
-      
-      del: function(id) {
-        return this.collection.remove(id);
-      }
+
+        save: function(tKey, cKey, content) {
+            var confId = this.prefix + "_conferences/" + cKey;
+            var talkId = this.prefix + "_talks_" + this.options.suffix + "/" + tKey;
+            var old = _.findWhere(
+                this.collection.outEdges(talkId),
+                {_to: confId}
+            );
+            if (old) {
+                return this.collection.replace(old._key, content);
+            } else {
+                return this.collection.save(talkId, confId, content);
+            }
+        },
+
+        removeTalk: function(tKey) {
+            var talkId = this.prefix + "_talks_" + this.options.suffix + "/" + tKey;
+            var toRm = this.collection.outEdges(talkId);
+            var self = this;
+            _.each(
+                toRm,
+                function(e) {
+                    self.collection.remove(e._id);
+                }
+            );
+        },
+
+        talksInConf: function(cKey) {
+            var confId = this.prefix + "_conferences/" + cKey;
+            return this.collection.inEdges(confId);
+        },
+
+        del: function(id) {
+            return this.collection.remove(id);
+        }
     });
-  exports.Repository = InConf_Repository;
-  
+    exports.Repository = InConf_Repository;
+
 }());

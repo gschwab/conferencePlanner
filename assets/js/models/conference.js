@@ -10,7 +10,6 @@ app.Conference = Backbone.Model.extend({
   url: function() {
     var key = this.get("_key");
     if (!!key) {
-        console.log(key);
       return "conference/" + key;
     }
     return "conference";
