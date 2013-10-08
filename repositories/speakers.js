@@ -39,7 +39,14 @@
     Speakers_Repository = Foxx.Repository.extend({
       // Define the functionality to display all elements in the collection
       list: function () {
-        return this.collection.toArray();
+          var speakers = this.collection.toArray().sort(
+              function(a, b){
+                  if(a.Name < b.Name) return -1;
+                  if(a.Name > b.Name) return 1;
+                  return 0;
+              }
+          );
+          return speakers;
       },
       
       head: function() {

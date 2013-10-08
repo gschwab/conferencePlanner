@@ -31,34 +31,39 @@
 
 
 (function () {
-  "use strict";
+    "use strict";
   
-  var _ = require("underscore"),
+    var _ = require("underscore"),
     Foxx = require("org/arangodb/foxx"),
     Tracks_Repository = Foxx.Repository.extend({
-      // Define the functionality to display all elements in the collection
-      list: function () {
-          require("internal").print(this.collection.toArray());
-          require("internal").print(this.collection.toArray().sort(function(a,b) { return a.TrackNumber_key - b.TrackNumber_key } ));
-        return this.collection.toArray().sort(function(a,b) { return a.TrackNumber_key - b.TrackNumber_key } );
-      },
+        // Define the functionality to display all elements in the collection
+        list: function () {
+            var tracks = this.collection.toArray().sort(
+                function(a, b){
+                    if(a.TrackNumber_key < b.TrackNumber_key) return -1;
+                    if(a.TrackNumber_key > b.TrackNumber_key) return 1;
+                    return 0;
+                }
+            );
+            return tracks;
+        },
       
-      show: function(id) {
-        return this.collection.document(id);
-      },
+        show: function(id) {
+            return this.collection.document(id);
+        },
       
-      save: function(content) {
-        return this.collection.save(content);
-      },
+        save: function(content) {
+            return this.collection.save(content);
+        },
 
         update: function(id, content) {
             return this.collection.replace(id, content);
         },
 
-      del: function(id) {
-        return this.collection.delete(id);
-      }
+        del: function(id) {
+            return this.collection.delete(id);
+        }
     });
-  exports.Repository = Tracks_Repository;
+    exports.Repository = Tracks_Repository;
   
 }());

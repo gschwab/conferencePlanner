@@ -24,8 +24,18 @@ app.overView = Backbone.View.extend({
         this.slots = 65;
         //number of tracks
         this.tracks = 3;
-
-
+/*
+        var tmp;
+        $.ajax({
+            async: false,
+            url: "track",
+            method: "GET",
+            success: function(data){
+                tmp = data.length;
+            }
+        });
+        this.tracks = tmp;
+*/
         this.talkTmpl = new EJS({url: 'templates/singleTalkView.ejs'}),
         this.rows = [];
         this.hr = {};
@@ -49,21 +59,21 @@ app.overView = Backbone.View.extend({
     template: new EJS({url: 'templates/overView.ejs'}),
 
     removeTalkFromSchedule: function(e) {
-        console.log(e);
         e = e || window.event;
         if (!this.dragging) {
             return;
         }
         e.cancelBubble = true;
         var talk = this.talks.get(this.dragging.id);
-
         $.ajax({
             url: "inConf/" + talk.get("_key") + "/" + this.conf._key,
             method: "DELETE"
         });
         this.addTalk(talk);
         this.cleanUpMovable();
-        $(".moveable").remove();
+        this.dragging = null;
+        this.oldSib = null;
+        this.oldParent = null;
     },
 
     switchDay: function(e) {
