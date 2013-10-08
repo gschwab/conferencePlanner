@@ -1,8 +1,8 @@
 {
   "name": "Conference-Planner",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An application to plan conferences.",
-  "author": "Heiko Kernbach & Michael Hackstein",
+  "author": "Heiko Kernbach & Michael Hackstein & gschwab",
 
   "controllers": {
     "/": "conferencePlanner.js"

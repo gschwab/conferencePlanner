@@ -4,54 +4,60 @@
 var app = app || {};
 
 app.navigationView = Backbone.View.extend({
-  el: '#header',
+    el: '#header',
 
-  events: {
-    "click li"            : "switchToTab",
-    "click #logoutButton" : "logout"
-  },
+    events: {
+        "click li"            : "switchToTab",
+        "click #logoutButton" : "logout"
+    },
 
-  initialize: function () {
-    this.collection = new app.Sessions();
-  },
+    initialize: function () {
+        this.collection = new app.Sessions();
+    },
 
-//  template: new EJS({url: 'templates/navigationView.ejs'}),
+    //  template: new EJS({url: 'templates/navigationView.ejs'}),
     template: _.template(new EJS({url: 'templates/navigationView.ejs'}).text),
 
-  switchToTab: function(e) {
-    app.router.navigate(
-      e.currentTarget.id,
-      {trigger: true}
-    );
-  },
+    switchToTab: function(e) {
+        app.router.navigate(
+            e.currentTarget.id,
+            {trigger: true}
+        );
+    },
 
-  setActive: function(id) {
-    $("li", $(this.el)).toggleClass("active", false);
-    $("#" + id).toggleClass("active", true);
-  },
+    setActive: function(id) {
+        $("li", $(this.el)).toggleClass("active", false);
+        $("#" + id).toggleClass("active", true);
+    },
 
-  render: function() {
+    render: function() {
+        if (typeof this.conference === 'undefined') {
+            this.conference = {
+                conferenceName: 'undefined',
+                conferenceKey: 'undefined'
+            };
+        }
 
-//    $(this.el).html(this.template.text);
-      this.$el.html(
-          this.template(
-              {
-                  conferenceName: this.conference.conferenceName,
-                  conferenceKey: this.conference.conferenceKey
-              }
-          )
-      );
-    return this;
-  },
-  
-  logout: function() {
-    var response = this.collection.logout();
-    if (response === true) {
-      app.router.navigate('/login', true);
+        //    $(this.el).html(this.template.text);
+        this.$el.html(
+            this.template(
+                {
+                    conferenceName: this.conference.conferenceName,
+                    conferenceKey: this.conference.conferenceKey
+                }
+            )
+        );
+        return this;
+    },
+
+    logout: function() {
+        var response = this.collection.logout();
+        if (response === true) {
+            app.router.navigate('/login', true);
+        }
+        else {
+            alert("Logout error");
+        }
     }
-    else {
-      alert("Logout error");
-    }
-  }
 
 });

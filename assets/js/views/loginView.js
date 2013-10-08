@@ -31,7 +31,7 @@ app.loginView = Backbone.View.extend({
   },
 
   backToLogin: function () {
-    app.router.navigate('login',true);
+    app.router.navigate('login',{trigger: true});
   },
 
   login: function() {

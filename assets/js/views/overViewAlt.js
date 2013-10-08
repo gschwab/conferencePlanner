@@ -49,6 +49,7 @@ app.overView = Backbone.View.extend({
     template: new EJS({url: 'templates/overView.ejs'}),
 
     removeTalkFromSchedule: function(e) {
+        console.log(e);
         e = e || window.event;
         if (!this.dragging) {
             return;

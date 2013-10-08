@@ -19,6 +19,7 @@ app.ConferenceView = Backbone.View.extend({
     template: _.template(new EJS({url: 'templates/conferenceView.ejs'}).text),
 
     render: function() {
+        this.collection.fetch({async:false});
         this.$el = $(this.el);
         this.$el.html(
             this.template(
@@ -45,7 +46,6 @@ app.ConferenceView = Backbone.View.extend({
     },
 
     newConference: function(e) {
-        console.log("KLICK!!!!");
         app.router.navigate(
             "newConference",
             {trigger: true}

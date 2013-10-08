@@ -29,5 +29,5 @@ app.Tracks = Backbone.Collection.extend({
         return this.models.map(function(m) {
             return m.attributes;
         });
-    },
+    }
 });

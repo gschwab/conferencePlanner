@@ -44,6 +44,15 @@
 
 
     function setupAuthentication() {
+        app.activateAuthentication({
+            type: config.authentication.type,
+            cookieLifetime: config.authentication.cookieLifetime,
+            cookieName: config.authentication.cookieName,
+            sessionLifetime: config.authentication.sessionLifetime
+        });
+
+
+        /*
         var sessions = new foxxAuthentication.Sessions(applicationContext, {
             lifetime: config.authentication.sessionLifetime
         });
@@ -55,7 +64,7 @@
 
         var auth = new foxxAuthentication.Authentication(applicationContext, sessions, cookieAuth);
 
-        return auth;
+        return auth;*/
     }
 
     var auth = setupAuthentication();
@@ -85,20 +94,34 @@
     var InConf = null;
     var inConf = null;
 
-    app.before("/*", function (req, res) {
-        // run the authentication
-        var authResult = auth.authenticate(req);
+    var arangodb = require("org/arangodb");
+    var db = arangodb.db;
 
-        if (authResult.errorNum !== internal.errors.ERROR_NO_ERROR) {
-            // not authenticated
+    var createCollection = function(name) {
+        var handle = applicationContext.collectionName(name);
+        if (db._collection(handle) === null) {
+            db._create(handle);
+        } else {
+            console.warn("collection '%s' already exists. Leaving it untouched.", handle);
+        }
+    };
+
+    var createEdgeCollection = function(name) {
+        var handle = applicationContext.collectionName(name);
+        if (db._collection(handle) === null) {
+            db._createEdgeCollection(handle);
+        } else {
+            console.warn("collection '%s' already exists. Leaving it untouched.", handle);
+        }
+    };
+
+    app.before("/*", function (req, res) {
+
+        if (req.currentSession == null) {
             return;
         }
-
-        // authenticated, now we have a session
-        app.currentSession = authResult.session;
-
-        var conferenceKey = app.currentSession.get("conferenceKey");
-        if (conferenceKey !== "") {
+        var conferenceKey = req.currentSession.get("conferenceKey");
+        if (conferenceKey !== "" && typeof conferenceKey !== "undefined") {
             currentConferenceKey = conferenceKey;
 
             Tracks = require("repositories/tracks").Repository;
@@ -129,18 +152,18 @@
     });
 
     app.get("/checkConference", function (req, res) {
-        if (app.currentSession !== null &&  typeof app.currentSession !== "undefined") {
+        if (req.currentSession !== null &&  typeof req.currentSession !== "undefined") {
             res.json(
                 {
-                    conferenceKey: app.currentSession.get("conferenceKey"),
-                    conferenceName: app.currentSession.get("conferenceName")
+                    conferenceKey: req.currentSession.get("conferenceKey"),
+                    conferenceName: req.currentSession.get("conferenceName")
                 }
             );
         }
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.after("/*", function (req, res) {
-        var session = app.currentSession;
+        var session = req.currentSession;
         if (session == null) {
             // we don't have any session
             return;
@@ -148,21 +171,11 @@
         session.update();
     });
 
-    app.post("/logout", function (req, res) {
-        if (app.currentSession !== null &&  typeof app.currentSession !== "undefined") {
-            auth.endSession(req, res, app.currentSession._key);
-            app.currentSession = null;
-        }
+    app.logout("/logout");
 
-        res.json({
-            "msg": "logged out"
-        });
-    });
-
-/*    app.login(
+    app.login(
         "/login", {
             onSuccess: function (req, res) {
-                req.currentSession.set("fancy", "pants");
                 res.json({
                     msg: "Logged in!",
                     user: req.user.identifier,
@@ -171,126 +184,93 @@
                 return;
             }
         }
-    );*/
-
-    app.post("/login", function (req, res) {
-
-        var parsedResponse = JSON.parse(req.requestBody);
-        var username = parsedResponse.username;
-        var password = parsedResponse.password;
-
-        try {
-            var users = new foxxAuthentication.Users(applicationContext);
-
-            // only valid & active users can login
-            if (users.isValid(username, password)) {
-                app.currentSession = auth.beginSession(req, res, username, {
-                    foo: "bar",
-                    conferenceKey: "",
-                    conferenceName: ""
-                });
-                res.json({
-                    "msg": "logged in",
-                    "session": app.currentSession
-                });
-                return;
-            }
-        }
-        catch (err) {
-        }
-
-        // user is invalid. show error
-        res.json({
-            "msg": "invalid user"
-        });
-        res.status(401);
-    });
+    );
 
     app.get("conference", function (req, res) {
         res.json(conferences.list());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("conference/:id", function (req, res) {
         var id = req.params("id");
         res.json(conferences.show(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("conference", function (req, res) {
         res.json(conferences.save(JSON.parse(req.requestBody)));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.put("conference/:id", function (req, res) {
         var id = req.params("id");
         res.json(conferences.update(id, JSON.parse(req.requestBody)));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("conference/:id", function (req, res) {
         var id = req.params("id");
         res.json(conferences.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("tracks", function (req, res) {
         res.json(tracks.list());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("tracks/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.show(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("list/tracks", function (req, res) {
         res.json(tracks.head());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("tracks", function (req, res) {
         res.json(tracks.save(JSON.parse(req.requestBody)));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.put("tracks/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.update(id, JSON.parse(req.requestBody)));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("tracks/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("speaker", function (req, res) {
         res.json(speakers.list());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("speaker/:id", function (req, res) {
         var id = req.params("id");
         res.json(speakers.show(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("list/speakers", function (req, res) {
         res.json(speakers.head());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("speaker", function (req, res) {
         res.json(speakers.save(JSON.parse(req.requestBody)));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.put("speaker/:id", function (req, res) {
         var id = req.params("id");
         res.json(speakers.update(id, JSON.parse(req.requestBody)));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("speaker/:id", function (req, res) {
         var id = req.params("id");
         res.json(speakers.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("talk", function (req, res) {
         res.json(talks.list());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("talk/:id", function (req, res) {
         var id = req.params("id");
         talks.show(id);
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("talk", function (req, res) {
         var content = JSON.parse(req.requestBody),
@@ -299,7 +279,7 @@
             gives.save(content.Speaker_key, ret._key);
         }
         res.json(ret);
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.put("talk/:id", function (req, res) {
         var id = req.params("id"),
@@ -307,44 +287,44 @@
             ret = talks.update(id, content);
         gives.update(content.Speaker_key, ret._key);
         res.json(ret);
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("talk/:id", function (req, res) {
         var id = req.params("id");
         inConf.removeTalk(id)
         res.json(talks.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("track", function (req, res) {
         res.json(tracks.list());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("track/:id", function (req, res) {
         var id = req.params("id");
         tracks.show(id);
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("track", function (req, res) {
         tracks.save(req.body());
         res.json("OK");
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.put("track/:id", function (req, res) {
         var id = req.params("id"),
             content = req.body();
         tracks.update(id, content);
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("track/:id", function (req, res) {
         var id = req.params("id");
         res.json(tracks.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("gives/:speakerId/:talkId", function (req, res) {
         var sId = req.params("speakerId");
         var tId = req.params("talkId");
         res.json(gives.save(sId, tId));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("gives/:speakerId", function (req, res) {
         var sId = req.params("speakerId");
@@ -352,17 +332,17 @@
         res.json(_.map(edges, function (e) {
             return talks.show(e._to);
         }));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("gives/:edgeId", function (req, res) {
         var id = req.params("edgeId");
         res.json(gives.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("inTrack/:trackId", function (req, res) {
         var tId = req.params("trackId");
         res.json(inTrack.listTalksIn(tId));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("html/:confId/:day", function (req, res) {
         var confId = req.params("confId");
@@ -373,30 +353,30 @@
         var test = tg.createTable("Home");
 
         res.body = test;
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("inTrack/:trackId/:talkId", function (req, res) {
         var talkId = req.params("talkId");
         var trackId = req.params("trackId");
         res.json(inTrack.save(talkId, trackId));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("inTrack/:edgeId", function (req, res) {
         var id = req.params("edgeId");
         res.json(inTrack.del(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("talksInConf/:confId", function (req, res) {
         var id = req.params("confId");
         res.json(inConf.talksInConf(id));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("inConf/:talkId/:confId", function (req, res) {
         var talkId = req.params("talkId"),
             confId = req.params("confId"),
             content = JSON.parse(req.requestBody);
         res.json(inConf.save(talkId, confId, content));
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.del("inConf/:talkId/:confId", function (req, res) {
         var talkId = req.params("talkId"),
@@ -406,23 +386,33 @@
                 inConf.collection.remove(doc._key);
             }
         );
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("conferences", function (req, res) {
         res.json(conferences.list());
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.post("setConference/:conferenceKey", function (req, res) {
         var conferenceKey = req.params("conferenceKey");
         var conference = conferences.show(conferenceKey);
-        app.currentSession.set("conferenceKey", conferenceKey);
-        app.currentSession.set("conferenceName", conference.conference);
-    });
+        req.currentSession.set("conferenceKey", conferenceKey);
+        req.currentSession.set("conferenceName", conference.conference);
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
+
+    app.post("createConference/:conferenceName", function (req, res) {
+        var conferenceName = req.params("conferenceName");
+        var conference = conferences.save({conference: conferenceName});
+        var collectionNameSuffix = "_" + conference._key;
+        createCollection("speakers" + collectionNameSuffix);
+        createCollection("talks" + collectionNameSuffix);
+        createCollection("tracks" + collectionNameSuffix);
+        createEdgeCollection("gives" + collectionNameSuffix);
+        createEdgeCollection("inConf" + collectionNameSuffix);
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
     app.get("blub", function (req, res) {
         conferences._show
-//        res.json({conferenceName: app.currentSession.get("conference")});
         res.json({blub: "BLUBBER", blubber: "foxxxxxxxx"});
-    });
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
 
 }());

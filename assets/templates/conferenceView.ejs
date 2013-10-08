@@ -1,7 +1,16 @@
-<select id="conferencesSelection">
-    <option value="">--select a conference--</option>
-    <% for (key in conferences) { %>
-        <option value="<%=conferences[key].attributes._key%>"><%=conferences[key].attributes.conference%></option>
-    <% } %>
-</select>
-<!--<button id="newConferenceButton" class="btn btn-success pull-left">New Conference</button>-->
+<div align="center">
+    <h2>
+        Please choose a conference or create a new one
+    </h2>
+</div>
+<div align="center">
+    <select id="conferencesSelection">
+        <option value="">--select a conference--</option>
+        <% for (key in conferences) { %>
+            <option value="<%=conferences[key].attributes._key%>"><%=conferences[key].attributes.conference%></option>
+        <% } %>
+    </select>
+</div>
+<div align="center">
+    <button id="newConferenceButton" class="btn btn-success">New Conference</button>
+</div>

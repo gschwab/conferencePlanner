@@ -2,40 +2,28 @@
 /*global window, $, Backbone */
 
 var app = app || {};
-var login = false;
 
 app.Router = Backbone.Router.extend({
 
     routes: {
-        ""        : "main",
-        "home"    : "main",
-        "talks"   : "talks",
-        "speaker" : "speaker",
-        "tracks"  : "tracks",
-        "conferences"  : "conferences",
-        "newConference"  : "newConference",
-        "login"   : "login"
+        ""              : "main",
+        "home"          : "main",
+        "talks"         : "talks",
+        "speaker"       : "speaker",
+        "tracks"        : "tracks",
+        "conferences"   : "conferences",
+        "newConference" : "newConference",
+        "login"         : "login"
     },
 
     initialize: function () {
-        var self = this;
-        this.loginView = new app.loginView();
-
-        $(document).ajaxError(function(err1, err2) {
-            if (err2.status === 401) {
-            login = true;
-                if (app.router) {
-                    self.loginView.backToLogin();
-                }
-            }
-        });
-
-        this.overView = new app.overView();
-        this.naviView = new app.navigationView();
-        this.speakerView = new app.SpeakerView();
-        this.talkView = new app.TalkView();
-        this.trackView = new app.TrackView();
-        this.conferenceView = new app.ConferenceView();
+        this.loginView         = new app.loginView();
+        this.overView          = new app.overView();
+        this.naviView          = new app.navigationView();
+        this.speakerView       = new app.SpeakerView();
+        this.talkView          = new app.TalkView();
+        this.trackView         = new app.TrackView();
+        this.conferenceView    = new app.ConferenceView();
         this.newConferenceView = new app.NewConferenceView();
     },
 
@@ -65,12 +53,22 @@ app.Router = Backbone.Router.extend({
         var result = this.getConferenceName();
         this.naviView.conference = result;
 
-        if (result !== null && result.conferenceKey !== '') {
+        if (
+            result
+            && result.hasOwnProperty("conferenceKey")
+            && typeof result.conferenceKey !== 'undefined'
+            && result.conferenceKey !== ''
+            ) {
             return true;
         }
 
-        this.navigate("conferences", { trigger: true });
+        if (result && result.hasOwnProperty("conferenceKey")) {
+            this.navigate("conferences", { trigger: true });
+            return false;
+        }
+
         return false;
+
     },
 
     main: function () {
@@ -127,12 +125,16 @@ app.Router = Backbone.Router.extend({
 
 });
 
+$.ajaxSetup({
+    statusCode: {
+        401: function(){
+            if(app.router)
+            app.router.navigate('login', { trigger: true });
+// window.location.replace('/#login');
+        }
+    }
+});
 app.router = new app.Router();
 Backbone.history.start();
 
-if (login === true) {
-    app.router.navigate('/login', true);
-}
-else {
-    app.router.naviView.render();
-}
+//app.router.naviView.render();

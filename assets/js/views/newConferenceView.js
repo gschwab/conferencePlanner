@@ -11,9 +11,7 @@ app.NewConferenceView = Backbone.View.extend({
     },
 
     events: {
-        'change #conferencesSelection' : 'setConference',
-        'click #newConferenceButton'   : 'newConference'
-    },
+        'click #createNewConferenceButton'   : 'createConference'    },
 
     template: _.template(new EJS({url: 'templates/newConferenceView.ejs'}).text),
 
@@ -29,27 +27,18 @@ app.NewConferenceView = Backbone.View.extend({
         return this;
     },
 
-    setConference: function(e) {
+    createConference: function(e) {
         $.ajax({
-            url: "setConference/" + e.currentTarget.value,
+            url: "createConference/" + $("#newConferenceName").val(),
             method: "POST",
             success: function(){
-                var key = $("#conferencesSelection").val();
-                var name = $("#conferencesSelection").find('option:selected').text();
-                app.router.naviView.conference = {conferenceName: name, conferenceKey: key}
-                app.router.naviView.render();
+//                var name = $("#newConferenceName").find('option:selected').text();
+                app.router.navigate('conferences', { trigger: true });
             }
         });
 
-    },
-
-    newConference: function(e) {
-        console.log("KLICK!!!!");
-        app.router.navigate(
-            "newConference",
-            {trigger: true}
-        );
     }
+
 
 });
 

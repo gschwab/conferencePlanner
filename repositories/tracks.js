@@ -38,7 +38,9 @@
     Tracks_Repository = Foxx.Repository.extend({
       // Define the functionality to display all elements in the collection
       list: function () {
-        return this.collection.toArray();
+          require("internal").print(this.collection.toArray());
+          require("internal").print(this.collection.toArray().sort(function(a,b) { return a.TrackNumber_key - b.TrackNumber_key } ));
+        return this.collection.toArray().sort(function(a,b) { return a.TrackNumber_key - b.TrackNumber_key } );
       },
       
       show: function(id) {
