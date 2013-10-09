@@ -36,7 +36,7 @@ app.overView = Backbone.View.extend({
         });
         this.tracks = tmp;
 */
-        this.talkTmpl = new EJS({url: 'templates/singleTalkView.ejs'}),
+        this.talkTmpl = new EJS({url: 'templates/singleTalkView.ejs'});
         this.rows = [];
         this.hr = {};
         this.talks = new app.Talks();

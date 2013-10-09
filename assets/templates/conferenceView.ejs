@@ -7,7 +7,11 @@
     <select id="conferencesSelection">
         <option value="">--select a conference--</option>
         <% for (key in conferences) { %>
-            <option value="<%=conferences[key].attributes._key%>"><%=conferences[key].attributes.conference%></option>
+            <% if(conferences[key].attributes._key == currentConferenceKey) { %>
+                <option selected="selected" value="<%=conferences[key].attributes._key%>"><%=conferences[key].attributes.conference%></option>
+            <% } else { %>
+                <option value="<%=conferences[key].attributes._key%>"><%=conferences[key].attributes.conference%></option>
+            <% } %>
         <% } %>
     </select>
 </div>

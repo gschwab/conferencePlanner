@@ -19,12 +19,19 @@ app.ConferenceView = Backbone.View.extend({
     template: _.template(new EJS({url: 'templates/conferenceView.ejs'}).text),
 
     render: function() {
+        //get conferenceKey for preselection
+        var currentConferenceKey = 0;
+        if (typeof this.conference !== 'undefined') {
+            currentConferenceKey = this.conference.conferenceKey;
+        }
+
         this.collection.fetch({async:false});
         this.$el = $(this.el);
         this.$el.html(
             this.template(
                 {
-                    conferences: this.collection.models
+                    conferences: this.collection.models,
+                    currentConferenceKey: currentConferenceKey
                 }
             )
         );

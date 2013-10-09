@@ -52,6 +52,7 @@ app.Router = Backbone.Router.extend({
     checkConference: function () {
         var result = this.getConferenceName();
         this.naviView.conference = result;
+        this.conferenceView.conference = result;
 
         if (
             result
