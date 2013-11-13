@@ -9,13 +9,13 @@ app.overView = Backbone.View.extend({
     initialize: function () {
         var self = this;
 
+        //fetch model, defined in router.js
+        this.model.fetch({async:false});
+
         //TODO
-        this.conf = {
-          _key: "123"
-        };
         this.day = 1;
         //number of days
-        this.days = 2;
+        this.days = this.model.get("numberOfDays");
         //in minutes (e.g. 60 = "01:00", 420 = "07:00")
         this.start = 420;
         //in minutes
@@ -66,7 +66,7 @@ app.overView = Backbone.View.extend({
         e.cancelBubble = true;
         var talk = this.talks.get(this.dragging.id);
         $.ajax({
-            url: "inConf/" + talk.get("_key") + "/" + this.conf._key,
+            url: "inConf/" + talk.get("_key"),
             method: "DELETE"
         });
         this.addTalk(talk);
@@ -272,7 +272,7 @@ app.overView = Backbone.View.extend({
         var track = tdId[2];
         if (this.moveTalkToCalender(this.dragging.id, day, slot, track)) {
             $.ajax({
-                url: "inConf/" + talk.get("_key") + "/" + this.conf._key,
+                url: "inConf/" + talk.get("_key"),
                 method: "POST",
                 data: JSON.stringify({
                     day: this.day,
@@ -323,7 +323,7 @@ app.overView = Backbone.View.extend({
             success: function() {
                 self.appendCollectionTracks();
                 $.ajax({
-                    url: "talksInConf/" + self.conf._key,
+                    url: "talksInConf",
                     method: "GET",
                     success: function(data) {
                         self.updateLinkedTalks(data);

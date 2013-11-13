@@ -18,7 +18,7 @@ app.Router = Backbone.Router.extend({
 
     initialize: function () {
         this.loginView         = new app.loginView();
-        this.overView          = new app.overView();
+//        this.overView          = new app.overView({model:new app.Configuration()});
         this.naviView          = new app.navigationView();
         this.speakerView       = new app.SpeakerView();
         this.talkView          = new app.TalkView();
@@ -76,6 +76,15 @@ app.Router = Backbone.Router.extend({
         if (! this.checkConference()) {
             return;
         }
+        this.overView = new app.overView(
+            {
+                model:new app.Configuration(
+                    {
+                        _key: app.ConferenceId
+                    }
+                )
+            }
+        );
         this.overView.render();
         this.naviView.setActive("home");
         this.naviView.render();

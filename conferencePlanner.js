@@ -366,21 +366,18 @@
         res.json(inTrack.del(id));
     }).onlyIfAuthenticated(401, "You need to be authenticated");
 
-    app.get("talksInConf/:confId", function (req, res) {
-        var id = req.params("confId");
-        res.json(inConf.talksInConf(id));
+    app.get("talksInConf", function (req, res) {
+        res.json(inConf.talksInConf(currentConferenceKey));
     }).onlyIfAuthenticated(401, "You need to be authenticated");
 
-    app.post("inConf/:talkId/:confId", function (req, res) {
+    app.post("inConf/:talkId", function (req, res) {
         var talkId = req.params("talkId"),
-            confId = req.params("confId"),
             content = JSON.parse(req.requestBody);
-        res.json(inConf.save(talkId, confId, content));
+        res.json(inConf.save(talkId, currentConferenceKey, content));
     }).onlyIfAuthenticated(401, "You need to be authenticated");
 
-    app.del("inConf/:talkId/:confId", function (req, res) {
-        var talkId = req.params("talkId"),
-            confId = req.params("confId");
+    app.del("inConf/:talkId", function (req, res) {
+        var talkId = req.params("talkId");
         inConf.collection.outEdges("dev_conferencePlanner_talks_" + currentConferenceKey + "/" + talkId).forEach(
             function(doc) {
                 inConf.collection.remove(doc._key);
@@ -392,6 +389,11 @@
         res.json(conferences.list());
     }).onlyIfAuthenticated(401, "You need to be authenticated");
 
+    app.get("conference/:key", function (req, res) {
+        var key = req.params("key");
+        res.json(conferences.show(key));
+    }).onlyIfAuthenticated(401, "You need to be authenticated");
+
     app.post("setConference/:conferenceKey", function (req, res) {
         var conferenceKey = req.params("conferenceKey");
         var conference = conferences.show(conferenceKey);
@@ -399,20 +401,20 @@
         req.currentSession.set("conferenceName", conference.conference);
     }).onlyIfAuthenticated(401, "You need to be authenticated");
 
-    app.post("createConference/:conferenceName", function (req, res) {
+    app.post("createConference/:conferenceName/:numberOfDays", function (req, res) {
         var conferenceName = req.params("conferenceName");
-        var conference = conferences.save({conference: conferenceName});
+        var numberOfDays = req.params("numberOfDays");
+        var conference = conferences.save({
+            conference: conferenceName,
+            numberOfDays: numberOfDays
+        });
         var collectionNameSuffix = "_" + conference._key;
         createCollection("speakers" + collectionNameSuffix);
         createCollection("talks" + collectionNameSuffix);
         createCollection("tracks" + collectionNameSuffix);
+        createCollection("configuration" + collectionNameSuffix);
         createEdgeCollection("gives" + collectionNameSuffix);
         createEdgeCollection("inConf" + collectionNameSuffix);
-    }).onlyIfAuthenticated(401, "You need to be authenticated");
-
-    app.get("blub", function (req, res) {
-        conferences._show
-        res.json({blub: "BLUBBER", blubber: "foxxxxxxxx"});
     }).onlyIfAuthenticated(401, "You need to be authenticated");
 
 }());

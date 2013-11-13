@@ -3,7 +3,7 @@
     {
         "type" : "cookie",
         "cookieLifetime": 36000,
-        "cookieName":"meinKeks",
+        "cookieName":"conferencePlanner",
         "sessionLifetime":6000
     }
 }

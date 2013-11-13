@@ -11,7 +11,8 @@ app.NewConferenceView = Backbone.View.extend({
     },
 
     events: {
-        'click #createNewConferenceButton'   : 'createConference'    },
+        'click #createNewConferenceButton'   : 'createConference'
+    },
 
     template: _.template(new EJS({url: 'templates/newConferenceView.ejs'}).text),
 
@@ -29,7 +30,7 @@ app.NewConferenceView = Backbone.View.extend({
 
     createConference: function(e) {
         $.ajax({
-            url: "createConference/" + $("#newConferenceName").val(),
+            url: "createConference/" + $("#newConferenceName").val() + "/" + $("#numberOfDays").val(),
             method: "POST",
             success: function(){
 //                var name = $("#newConferenceName").find('option:selected').text();

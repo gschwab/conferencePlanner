@@ -45,6 +45,7 @@ app.ConferenceView = Backbone.View.extend({
             success: function(){
                 var key = $("#conferencesSelection").val();
                 var name = $("#conferencesSelection").find('option:selected').text();
+                app.ConferenceId = key;
                 app.router.naviView.conference = {conferenceName: name, conferenceKey: key}
                 app.router.naviView.render();
             }
